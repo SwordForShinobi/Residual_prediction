@@ -5,6 +5,7 @@ import seaborn as sns
 import streamlit as st
 import tensorflow as tf
 import pickle
+from io import BytesIO
 
 # --- Загрузка моделей ---
 @st.cache_resource
@@ -193,8 +194,23 @@ if st.button("Предсказать остатки"):
                 mime="text/csv"
             )
 
+            # --- Кнопка скачивания (Excel) ---
+            # Используем BytesIO для сохранения в Excel
+            excel_buffer = BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                results_df.to_excel(writer, index=False, sheet_name='Прогноз')
+            excel_buffer.seek(0)  # Возвращаем указатель в начало
+
+            st.download_button(
+                label="📥 Скачать результаты (XLSX)",
+                data=excel_buffer,
+                file_name=f"прогноз_остатков_{period_num}_дней.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+            
         except Exception as e:
             st.error(f"❌ Ошибка при выполнении предсказания: {e}")
+
 
 
 
